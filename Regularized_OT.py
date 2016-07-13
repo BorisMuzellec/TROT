@@ -5,41 +5,32 @@ Created on Thu Jul  7 16:29:32 2016
 @author: boris
 """
 
-#TODO: Modify everything so that the best argument is returned (and not the last one)
-
-from copy import copy, deepcopy
+from copy import deepcopy
 import numpy as np
 import math
 import Projections as proj
-import CRPD_proj as crpd
-from Tsallis import q_exp, q_log, q_obj, q_Grad
+from Tsallis import q_obj, q_grad
 
-
-#Standard (euclidean) projection descent
-def euc_proj_descent(q,M,r,c,l ,precision,T = None, rate = None, rate_type = None):
+#Euclidean projected gradient descent
+def euc_proj_descent(q,M,r,c,l ,precision,T , rate = None, rate_type = None):
+    
+    if (q<=1): print("Warning: Projected gradient methods only work when q>1")    
     
     ind_map = np.matrix(r).transpose().dot(np.matrix(c))    
     P = deepcopy(ind_map)
 
-    old_score  = 100000  
     new_score = q_obj(q,P,M,l)
     scores = []
     scores.append(new_score)
     
-    if T is None:
-#        C = np.linalg.norm(M) + 2/l*math.sqrt(d*d/((l+1)*(l+1)) + math.sqrt(np.linalg.norm(pow(ind_map,-2*l))))
-#        C = C*C
-#        T = math.ceil(2*C/precision*precision)
-        T = 50        
-        print(T)
-    count = 1    
+    best_score = new_score
+    best_P = P
     
-    #while (old_score-new_score>precision) and count<=T:
+    count = 1    
+
     while count<=T:    
 
-        G = q_Grad(q,P,M,l)       
-        #print(np.linalg.norm(G)) 
-
+        G = q_grad(q,P,M,l)       
             
         if rate is None:
             P = proj.euc_projection(P - (math.sqrt(2*math.sqrt(2)/T)/np.linalg.norm(G))*G,r,c,precision) #Absolute horizon
@@ -53,37 +44,41 @@ def euc_proj_descent(q,M,r,c,l ,precision,T = None, rate = None, rate_type = Non
         elif rate_type is "square_summable":
             P = proj.euc_projection(P - rate/count*G,r,c,precision)
             
-        #Update and print scores
-        old_score = new_score
+        #Update score list
         new_score = q_obj(q,P,M,l)
         scores.append(new_score)
         
-        #print ('Old score: {0} \nNew score: {1}\n'.format(old_score, new_score))
+        #Keep track of the best solution so far
+        if (new_score < best_score):
+            best_score = new_score
+            best_P = P
+        
         count+=1
-    return P,scores
+    return best_P,scores
     
 
-#Kullback-Leibler projection descent
-def KL_proj_descent(q,M,r,c,l ,precision,T = None, rate = None, rate_type = None):
+#Kullback-Leibler projected gradient method
+def KL_proj_descent(q,M,r,c,l ,precision,T , rate = None, rate_type = None):
     
-    omega = math.sqrt(2*np.log(r.size))
+    if (q<=1): print("Warning: Projected gradient methods only work when q>1")    
+    
+    omega = math.sqrt(2*np.log(M.shape[0]))
     ind_map = np.matrix(r).transpose().dot(np.matrix(c))    
     
     P = deepcopy(ind_map)
 
-    
-    old_score  = 100000  
     new_score = q_obj(q,P,M,l)
     scores = []
     scores.append(new_score)
     
+    best_score = new_score
+    best_P= P
+    
     count = 1    
     
-    #while (old_score-new_score>precision) and count<=T:
     while count<=T: 
         
-        G = q_Grad(q,P,M,l)
-        #print(np.linalg.norm(G,np.inf))        
+        G = q_grad(q,P,M,l)        
         
         
         if rate is None:
@@ -102,58 +97,63 @@ def KL_proj_descent(q,M,r,c,l ,precision,T = None, rate = None, rate_type = None
         P = np.multiply(P,tmp)
         P = proj.Sinkhorn(P,r,c,precision)
         
-        #Update and print scores
-        old_score = new_score
+        #Update score list
         new_score = q_obj(q,P,M,l)
-        scores.append(new_score)        
+        scores.append(new_score)  
         
+        #Keep track of the best solution so far
+        if (new_score < best_score):
+            best_score = new_score
+            best_P = P
         
-        #print ('Old score: {0} \nNew score: {1}\n'.format(old_score, new_score))
+
         count+=1
 
-    return P, scores
+    return best_P, scores
 
 
 #Nesterov's accelerated gradient
 def Nesterov_grad(q,M,r,c,l ,precision,T):
     
+    if (q<2): print("Warning: Nesterov's accelerated gradient only works when q>2")
+    
     ind_map = np.matrix(r).transpose().dot(np.matrix(c))    
     P = deepcopy(ind_map)
 
-    #Estimation of the gradient lipschitz constant
+    #Estimation of the gradient Lipschitz constant
     L = q/(l*(q-1)*(q-1))
-    print(L)
 
-    old_score  = 100000  
+ 
     new_score = q_obj(q,P,M,l)
     scores = []
     scores.append(new_score)
     
-    #Negative cumulative weigthed gradient sum
+    best_score = new_score
+    best_Y = P
+    
+    #Negative cumulative weighted gradient sum
     grad_sum = np.zeros(P.shape)        
     count = 1    
     
-    #while (old_score-new_score>precision) and count<=T:
     while count<=T:    
 
-        G =q_Grad(q,P,M,l)
+        G =q_grad(q,P,M,l)
         grad_sum-=count/2*G        
         
         Y = proj.euc_projection(P-G/L,r,c,precision)
         Z = proj.Sinkhorn(np.multiply(ind_map,np.exp(grad_sum/L)),r,c,precision)
-        old_P = P
         P = (2*Z + (count)*Y)/(count+2)
         
-        #print(np.linalg.norm(ind_map-Z))
-        #print(np.linalg.norm(nu*CRPD_Grad(old_P,ind_map,l)-nu*CRPD_Grad(P,ind_map,l))/np.linalg.norm(old_P - P))
-        
-        #Update and print scores
-        old_score = new_score
-        new_score = q_obj(q,P,M,l)
+        #Update score list
+        new_score = q_obj(q,Y,M,l)
         scores.append(new_score)
-        #print ('Old score: {0} \nNew score: {1}\n'.format(old_score, new_score))
+        
+        #Keep track of the best solution so far
+        if (new_score < best_score):
+            best_score = new_score
+            best_Y = Y
 
         count+=1
         
-    return Y, scores
+    return best_Y, scores
     

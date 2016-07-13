@@ -6,6 +6,7 @@ Created on Thu May 26 10:42:22 2016
 """
 
 import numpy as np
+from math import ceil
 
 maxval = 100000
 
@@ -20,9 +21,9 @@ def rand_marginal(n):
     p[0] = x[0]/maxval
     return p
     
-
+#Same cost matrix as in Cuturi 2013 (for scale = 1)
 def rand_costs(n,scale):
-    X = np.random.multivariate_normal(np.zeros(n/10),np.identity(n/10),n)*scale
+    X = np.random.multivariate_normal(np.zeros(ceil(n/10)),np.identity(ceil(n/10)),n)*scale
     M = np.zeros((n,n))
     
     for i in range(n):
@@ -30,3 +31,11 @@ def rand_costs(n,scale):
             M[i,j] = np.linalg.norm(X[i]-X[j])
     
     return M/np.median(M)
+
+#Squared Euclidean distance cost matrix
+def euc_costs(n,scale):
+    M = np.zeros((n,n))
+    for i in range(n):
+        for j in range(n):
+            M[i,j]=(i/n - j/n)*(i/n - j/n)
+    return M*scale

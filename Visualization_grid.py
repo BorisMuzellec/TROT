@@ -5,16 +5,15 @@ Created on Tue Jul 12 15:54:41 2016
 @author: boris
 """
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import numpy as np
+from matplotlib.patches import Rectangle
+from scipy.stats import poisson
 
 from Regularized_OT import  KL_proj_descent
 from Tsallis import second_order_sinkhorn
 from Generators import rand_marginal, rand_costs, euc_costs  
-from matplotlib import gridspec
-from scipy.stats import poisson
-from matplotlib.patches import Rectangle
 from Projections import Sinkhorn
 
 
