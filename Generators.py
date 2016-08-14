@@ -21,13 +21,14 @@ def rand_marginal(n):
     p[0] = x[0]/maxval
     return p
     
-#Same cost matrix as in Cuturi 2013 (for scale = 1)
-def rand_costs(n,scale):
-    X = np.random.multivariate_normal(np.zeros(ceil(n/10)),np.identity(ceil(n/10)),n)*scale
-    M = np.zeros((n,n))
+    
+#Same cost matrix as in Cuturi 2013 (for scale = 1), not necessarily square
+def rand_costs(n,m,scale):
+    X = np.random.multivariate_normal(np.zeros(ceil(n/10)),np.identity(ceil(n/10)),max(n,m))*scale
+    M = np.zeros((n,m))
     
     for i in range(n):
-        for j in range(n):
+        for j in range(m):
             M[i,j] = np.linalg.norm(X[i]-X[j])
     
     return M/np.median(M)
@@ -38,4 +39,5 @@ def euc_costs(n,scale):
     for i in range(n):
         for j in range(n):
             M[i,j]=(i/n - j/n)*(i/n - j/n)
+            #M[i,j] = abs(i/n-j/n)
     return M*scale

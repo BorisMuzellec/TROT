@@ -5,13 +5,11 @@ Created on Wed Jun 15 11:38:13 2016
 @author: boris
 """
 
-###NOT WORKING WITH ESCORTS HERE###
 
 import numpy as np
 import math
 from copy import deepcopy
 from Projections import check, inner_Frobenius
-
 
 
 def q_exp (q,u):
@@ -43,8 +41,8 @@ def first_order_sinkhorn(q,M,r,c,l,precision):
     s = P.sum(axis = 0)
     
     count = 0
-    alpha = np.zeros(M.shape[1])
-    beta = np.zeros(M.shape[0])
+    alpha = np.zeros(M.shape[0])
+    beta = np.zeros(M.shape[1])
 
     while not (check(p,s,r,c,precision)) and count <= 1000:
 
@@ -73,6 +71,7 @@ def first_order_sinkhorn(q,M,r,c,l,precision):
 def second_order_sinkhorn(q,M,r,c,l,precision):
 
     n = M.shape[0]
+    m = M.shape[1]
     q1  = q_exp(q,-1)
     
     P = q1/q_exp(q,l*M)
@@ -82,8 +81,8 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
     s = P.sum(axis = 0)
     
     count = 0
-    alpha = np.zeros(M.shape[1])
-    beta = np.zeros(M.shape[0])
+    alpha = np.zeros(M.shape[0])
+    beta = np.zeros(M.shape[1])
 
     while not (check(p,s,r,c,precision)) and count <= 1000:
         
@@ -118,7 +117,7 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
         delta = np.multiply(b,b) - 4*np.multiply(a,d)
         
         
-        for i in range(n):
+        for i in range(m):
             if (delta[i] >=0 and d[i]<0 and a[i]>0):
                 # when s < c this is the negative root, 
                 # when s > c this is the smallest positive root when it exists
@@ -128,6 +127,78 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
                 beta[i] = 2*d[i]/(-b[i]) #derived from auxiliary function expansion
             else: beta[i] = 0
         A += beta
+    
+        
+        P = q1/q_exp(q,A)
+        p = P.sum(axis = 1)
+        s = P.sum(axis = 0)
+
+        count +=1
+    
+    print(count)
+    return P, count, q_obj(q,P,M,l)
+    
+#Less efficient than the previous rule...
+def third_order_sinkhorn(q,M,r,c,l,precision):
+
+    n = M.shape[0]
+    m = M.shape[1]
+    q1  = q_exp(q,-1)
+    
+    P = q1/q_exp(q,l*M)
+    A = deepcopy(l*M)
+    
+    p = P.sum(axis = 1)
+    s = P.sum(axis = 0)
+    
+    count = 0
+    alpha = np.zeros(M.shape[0])
+    beta = np.zeros(M.shape[1])
+
+    while not (check(p,s,r,c,precision)) and count <= 1000:
+        
+        
+        A_q1 = np.divide(P,(1+(1-q)*A))
+        a = (2-q)*(np.sum(np.divide(A_q1,(1+(1-q)*A)),axis = 1))
+        b = np.sum(A_q1,axis = 1)
+        d = r-p
+        delta = np.multiply(b,b) + 4*np.multiply(a,d) #This + sign is correct, since it should be -d and not d
+        
+        
+        for i in range(n):
+            if (delta[i] >=0 and d[i]>0):
+                # when p < r this is the negative root, 
+                # when p > r this is the smallest positive root when it exists
+                #alpha[i] = - (b[i] + math.sqrt(delta[i]))/(2*a[i])
+                alpha[i] = (-b[i] + math.sqrt(delta[i]))/(2*a[i])
+            elif (b[i] != 0):
+                alpha[i] = d[i]/b[i]
+                #alpha[i] = 2*d[i]/(b[i]) #derived from auxiliary function expansion
+            else: alpha[i] = 0
+                
+        A = (A.transpose() - alpha).transpose()
+                
+        
+        P = q1/q_exp(q,A)
+        s = P.sum(axis = 0)
+        
+        A_q1 = np.divide(P,(1+(1-q)*A))
+        a = (2-q)*(np.sum(np.divide(A_q1,(1+(1-q)*A)),axis = 0))
+        b = np.sum(A_q1,axis = 0)
+        d = c-s
+        delta = np.multiply(b,b) + 4*np.multiply(a,d)
+        
+        
+        for i in range(m):
+            if (delta[i] >=0 and d[i]>0):
+                # when s < c this is the negative root, 
+                # when s > c this is the smallest positive root when it exists
+                beta[i] = (-b[i] + math.sqrt(delta[i]))/(2*a[i])
+            elif (b[i] != 0):
+                beta[i] = d[i]/b[i]
+                #beta[i] = 2*d[i]/(b[i]) #derived from auxiliary function expansion
+            else: beta[i] = 0
+        A -= beta
     
         
         P = q1/q_exp(q,A)
