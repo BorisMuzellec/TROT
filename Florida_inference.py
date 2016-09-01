@@ -10,6 +10,7 @@ import numpy as np
 from Tsallis import second_order_sinkhorn
 from Projections import Sinkhorn
 from Regularized_OT import KL_proj_descent
+from math import sqrt
 
 
                 ##### START BY RUNNING THE DataLoader.py SCRIPT #####
@@ -72,6 +73,10 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
     Party_Avg = {}
     Joint_Distrib = {}
     M = {}
+    
+    #For the Hilbert version
+    E = {}
+    P = {}
     
     for county in CV_counties:
     
@@ -146,8 +151,11 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
         M[county][5,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.OTH'] - Party_Avg[county]['Democrat'])**2)
         M[county][5,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.OTH'] - Party_Avg[county]['Republican'])**2)
         
+        #Dissimilarity version
         M[county] = 1-M[county]
         
+        #Hilbert metric version -- Comment this out if you want the 'Dissimilarity' version
+        M[county] = np.sqrt(2*M[county])
     
         
     q = [0.5,0.6,0.7,0.8,0.9,1,1.25,1.5,2,5]
@@ -296,6 +304,9 @@ def CV_Cross_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, R
         M[county][5,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.OTH'] - Voter_Reference['SR.OTH']['Republican'])**2)
         
         M[county] = 1-M[county]
+        
+         #Hilbert metric version -- Comment this out if you want the 'Dissimilarity' version
+        M[county] = np.sqrt(2*M[county])
              
     q = [0.5,0.6,0.7,0.8,0.9,1,1.25,1.5,2,5]
     l = [1,5,10,20,50]
