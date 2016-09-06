@@ -1,12 +1,12 @@
 import pandas as pd
 
-from Florida_inference import CV_Local_Inference
-from DataLoader import *
+from Florida_inference import CV_Local_Inference, Local_Inference
+
 
 FlData = pd.read_csv('FlData_selected.csv')
 
 # Let's use only district 3
-# FlData = FlData.loc[FlData['District'] == 3]
+#FlData = FlData.loc[FlData['District'] == 3]
 
 FlData = FlData.dropna()
 FlData.drop('VoterID', axis=1, inplace=True)
@@ -57,9 +57,14 @@ for county in FlData.County.unique():
         (Voters_By_County[county][etnies].sum(axis=0) /
          Voters_By_County[county].shape[0])
 
-CV_counties = Voters_By_County.keys()
-output_file = 'output.out'
+CV_counties = FlData.loc[FlData['District'] == 3].County.unique()
+Validation_counties = FlData.loc[FlData['District'] != 3].County.unique()
+output_file = 'output_2'
 
 print('Start inference')
-CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals,
+best_score, best_q, best_l = CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals,
                    CV_counties, output_file)
+                   
+print('Use selected parameters on the rest of the dataset')
+
+validation_score = Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, Validation_counties, best_q, best_l, 'validation')

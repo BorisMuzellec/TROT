@@ -195,7 +195,7 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
             variance = np.power(scores - MSE,2).sum()/len(CV_counties)
             print('MSE: {0}\t Variance: {1}\n'.format(MSE,variance))
 
-            file.write('q: {0}\t l: {1}\t MSE: {2}\t Variance: {3}\n'.format(q[j],l[i],MSE,variance))
+            file.write('q: {0}\t l: {1}\t MSE: {2}\t Standard Deviation: {3}\n'.format(q[j],l[i],MSE,np.sqrt(variance)))
 
             if MSE < best_score:
                 q_best = q[j]
@@ -204,7 +204,7 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
                 best_score = MSE
 
 
-    print('Best score: {0}, Best q: {1}, Best lambda: {2}\t Variance: {3}\n'.format(best_score, q_best, l_best,variance_best))
+    print('Best score: {0}, Best q: {1}, Best lambda: {2}\t Standard Variance: {3}\n'.format(best_score, q_best, l_best,np.sqrt(variance_best)))
 
     file.close()
 
@@ -462,3 +462,128 @@ def CV_Cross_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, R
     print('Best score: {0}, Best q: {1}, Best lambda: {2}\n'.format(best_score, q_best, l_best))
 
     return best_score, q_best, l_best
+    
+    
+def Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, counties,q,l, filename):
+
+    file = open('{0}.txt'.format(filename), "w")
+
+    Ethnicity_Avg = {}
+    Party_Avg = {}
+    Joint_Distrib = {}
+    M = {}
+
+
+    for county in counties:
+
+        Ethnicity_Avg[county] = {}
+        for ethnicity in ['SR.WHI','SR.BLA','SR.HIS', 'SR.ASI', 'SR.NAT', 'SR.OTH']:
+             tmp = Voters_By_County[county].loc[Voters_By_County[county][ethnicity] ==1].drop(['County','District', 'Other', 'Democrat', 'Republican'],axis = 1)
+             Ethnicity_Avg[county][ethnicity] = tmp.sum(axis = 0)/tmp.shape[0]
+
+        Party_Avg[county] = {}
+        for party in ['Other', 'Democrat', 'Republican']:
+             tmp = Voters_By_County[county].loc[Voters_By_County[county][party] ==1].drop(['County','District', 'Other', 'Democrat', 'Republican'],axis = 1)
+             Party_Avg[county][party] = tmp.sum(axis = 0)/tmp.shape[0]
+
+
+        #The actual distribution
+
+        Joint_Distrib[county] = np.zeros((6,3))
+
+        Total_Num_Voters = Voters_By_County[county].shape[0]
+
+        Joint_Distrib[county][0,0] = Voters_By_County[county].loc[(Voters_By_County[county]['Other'] ==1) & (Voters_By_County[county]['SR.WHI']==1)].shape[0]
+        Joint_Distrib[county][0,1] = Voters_By_County[county].loc[(Voters_By_County[county]['Democrat'] ==1) & (Voters_By_County[county]['SR.WHI']==1)].shape[0]
+        Joint_Distrib[county][0,2] = Voters_By_County[county].loc[(Voters_By_County[county]['Republican'] ==1) & (Voters_By_County[county]['SR.WHI']==1)].shape[0]
+
+        Joint_Distrib[county][1,0] = Voters_By_County[county].loc[(Voters_By_County[county]['Other'] ==1) & (Voters_By_County[county]['SR.BLA']==1)].shape[0]
+        Joint_Distrib[county][1,1] = Voters_By_County[county].loc[(Voters_By_County[county]['Democrat'] ==1) & (Voters_By_County[county]['SR.BLA']==1)].shape[0]
+        Joint_Distrib[county][1,2] = Voters_By_County[county].loc[(Voters_By_County[county]['Republican'] ==1) & (Voters_By_County[county]['SR.BLA']==1)].shape[0]
+
+        Joint_Distrib[county][2,0] = Voters_By_County[county].loc[(Voters_By_County[county]['Other'] ==1) & (Voters_By_County[county]['SR.HIS']==1)].shape[0]
+        Joint_Distrib[county][2,1] = Voters_By_County[county].loc[(Voters_By_County[county]['Democrat'] ==1) & (Voters_By_County[county]['SR.HIS']==1)].shape[0]
+        Joint_Distrib[county][2,2] = Voters_By_County[county].loc[(Voters_By_County[county]['Republican'] ==1) & (Voters_By_County[county]['SR.HIS']==1)].shape[0]
+
+        Joint_Distrib[county][3,0] = Voters_By_County[county].loc[(Voters_By_County[county]['Other'] ==1) & (Voters_By_County[county]['SR.ASI']==1)].shape[0]
+        Joint_Distrib[county][3,1] = Voters_By_County[county].loc[(Voters_By_County[county]['Democrat'] ==1) & (Voters_By_County[county]['SR.ASI']==1)].shape[0]
+        Joint_Distrib[county][3,2] = Voters_By_County[county].loc[(Voters_By_County[county]['Republican'] ==1) & (Voters_By_County[county]['SR.ASI']==1)].shape[0]
+
+        Joint_Distrib[county][4,0] = Voters_By_County[county].loc[(Voters_By_County[county]['Other'] ==1) &(Voters_By_County[county]['SR.NAT']==1)].shape[0]
+        Joint_Distrib[county][4,1] = Voters_By_County[county].loc[(Voters_By_County[county]['Democrat'] ==1) & (Voters_By_County[county]['SR.NAT']==1)].shape[0]
+        Joint_Distrib[county][4,2] = Voters_By_County[county].loc[(Voters_By_County[county]['Republican'] ==1) & (Voters_By_County[county]['SR.NAT']==1)].shape[0]
+
+        Joint_Distrib[county][5,0] = Voters_By_County[county].loc[(Voters_By_County[county]['Other'] ==1) & (Voters_By_County[county]['SR.OTH']==1)].shape[0]
+        Joint_Distrib[county][5,1] = Voters_By_County[county].loc[(Voters_By_County[county]['Democrat'] ==1) & (Voters_By_County[county]['SR.OTH']==1)].shape[0]
+        Joint_Distrib[county][5,2] = Voters_By_County[county].loc[(Voters_By_County[county]['Republican'] ==1) & (Voters_By_County[county]['SR.OTH']==1)].shape[0]
+
+        Joint_Distrib[county] = Joint_Distrib[county]/Total_Num_Voters
+
+
+        #Create the cost matrix
+        M[county] = np.zeros((6,3))
+
+        M[county][0,0] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.WHI'] - Party_Avg[county]['Other'])**2)
+        M[county][0,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.WHI'] - Party_Avg[county]['Democrat'])**2)
+        M[county][0,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.WHI'] - Party_Avg[county]['Republican'])**2)
+
+        M[county][1,0] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.BLA'] - Party_Avg[county]['Other'])**2)
+        M[county][1,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.BLA'] - Party_Avg[county]['Democrat'])**2)
+        M[county][1,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.BLA'] - Party_Avg[county]['Republican'])**2)
+
+        M[county][2,0] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.HIS'] - Party_Avg[county]['Other'])**2)
+        M[county][2,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.HIS'] - Party_Avg[county]['Democrat'])**2)
+        M[county][2,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.HIS'] - Party_Avg[county]['Republican'])**2)
+
+        M[county][3,0] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.ASI'] - Party_Avg[county]['Other'])**2)
+        M[county][3,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.ASI'] - Party_Avg[county]['Democrat'])**2)
+        M[county][3,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.ASI'] - Party_Avg[county]['Republican'])**2)
+
+        M[county][4,0] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.NAT'] - Party_Avg[county]['Other'])**2)
+        M[county][4,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.NAT'] - Party_Avg[county]['Democrat'])**2)
+        M[county][4,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.NAT'] - Party_Avg[county]['Republican'])**2)
+
+        M[county][5,0] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.OTH'] - Party_Avg[county]['Other'])**2)
+        M[county][5,1] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.OTH'] - Party_Avg[county]['Democrat'])**2)
+        M[county][5,2] = np.exp(-0.1*np.linalg.norm(Ethnicity_Avg[county]['SR.OTH'] - Party_Avg[county]['Republican'])**2)
+
+        #Dissimilarity version
+        M[county] = 1-M[county]
+
+        #Hilbert metric version -- Comment this out if you want the 'Dissimilarity' version
+        M[county] = np.sqrt(2*M[county])
+
+
+
+    MSE = 0
+    scores = []
+    for county in counties:
+
+        print('County: {0}\n'.format(county))
+
+        r = Ethnicity_Marginals[county]
+        c = Party_Marginals[county]
+
+
+        if q < 1 :
+            Infered_Distrib,_,_ = second_order_sinkhorn(q,M[county],r, c,l, 1E-2)
+        elif q ==1:
+            Infered_Distrib = Sinkhorn(np.exp(-l*np.matrix(M[county])),r,c,1E-2)
+        else :
+            Infered_Distrib,_ = KL_proj_descent(q,M[county],r,c,l,1E-2, 50, rate = 1, rate_type = "square_summable")
+
+    #Mean Square Error
+        tmp  =np.linalg.norm(Joint_Distrib[county]-Infered_Distrib,2)
+        scores.append(tmp)
+        MSE +=tmp
+    
+
+    MSE = MSE/len(counties)
+    variance = np.power(scores - MSE,2).sum()/len(counties)
+    print('MSE: {0}\t Variance: {1}\n'.format(MSE,variance))
+
+    file.write('MSE: {0}\t Standard Deviation: {1}\n'.format(MSE,np.sqrt(variance)))
+
+    file.close()
+    
+    return MSE
