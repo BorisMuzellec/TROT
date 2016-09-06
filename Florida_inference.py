@@ -155,17 +155,19 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
         M[county] = np.sqrt(2*M[county])
 
 
-    q = [0.5,0.6,0.7,0.8,0.9,1,1.25,1.5,2,5]
-    l = [1,5,10,20,50]
+    q = [0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2]
+    l = [1,2,5,10]
 
     best_score = 1
     q_best = q[0]
     l_best = l[0]
+    variance_best = 0
 
     for j in range(len(q)):
         for i in range(len(l)):
 
-            score = 0
+            MSE = 0
+            scores = []
             print('q= {0}, l= {1}\n'.format(q[j],l[i]))
 
             for county in CV_counties:
@@ -183,21 +185,26 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
                 else :
                     Infered_Distrib,_ = KL_proj_descent(q[j],M[county],r,c,l[i],1E-2, 50, rate = 1, rate_type = "square_summable")
 
-                score += np.linalg.norm(Joint_Distrib[county]-Infered_Distrib,np.inf)
+            #Mean Square Error
+                tmp  =np.linalg.norm(Joint_Distrib[county]-Infered_Distrib,2)
+                scores.append(tmp)
+                MSE +=tmp
+            
 
+            MSE = MSE/len(CV_counties)
+            variance = np.power(scores - MSE,2).sum()/len(CV_counties)
+            print('MSE: {0}\t Variance: {1}\n'.format(MSE,variance))
 
-            score = score/len(CV_counties)
-            print('Score: {0}\n'.format(score))
+            file.write('q: {0}\t l: {1}\t MSE: {2}\t Variance: {3}\n'.format(q[j],l[i],MSE,variance))
 
-            file.write('q: {0}\t l: {1}\t Score: {2}\n'.format(q[j],l[i],score))
-
-            if score < best_score:
+            if MSE < best_score:
                 q_best = q[j]
                 l_best = l[i]
-                best_score = score
+                variance_best = variance
+                best_score = MSE
 
 
-    print('Best score: {0}, Best q: {1}, Best lambda: {2}\n'.format(best_score, q_best, l_best))
+    print('Best score: {0}, Best q: {1}, Best lambda: {2}\t Variance: {3}\n'.format(best_score, q_best, l_best,variance_best))
 
     file.close()
 
