@@ -189,7 +189,7 @@ def CV_Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, C
                 tmp  =np.linalg.norm(Joint_Distrib[county]-Infered_Distrib,2)
                 scores.append(tmp)
                 MSE +=tmp
-            
+
 
             MSE = MSE/len(CV_counties)
             variance = np.power(scores - MSE,2).sum()/len(CV_counties)
@@ -462,8 +462,8 @@ def CV_Cross_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, R
     print('Best score: {0}, Best q: {1}, Best lambda: {2}\n'.format(best_score, q_best, l_best))
 
     return best_score, q_best, l_best
-    
-    
+
+
 def Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, counties,q,l, filename):
 
     file = open('{0}.txt'.format(filename), "w")
@@ -576,7 +576,7 @@ def Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, coun
         tmp  =np.linalg.norm(Joint_Distrib[county]-Infered_Distrib,2)
         scores.append(tmp)
         MSE +=tmp
-    
+
 
     MSE = MSE/len(counties)
     variance = np.power(scores - MSE,2).sum()/len(counties)
@@ -585,5 +585,5 @@ def Local_Inference(Voters_By_County, Ethnicity_Marginals, Party_Marginals, coun
     file.write('MSE: {0}\t Standard Deviation: {1}\n'.format(MSE,np.sqrt(variance)))
 
     file.close()
-    
+
     return MSE
