@@ -66,7 +66,7 @@ from Evaluation import MSE
 
 #Compute the marginals and cost matrices in each county (usefull for CV)
 
-def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, CV_counties, filename):
+def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties, filename):
 
     file = open('{0}.txt'.format(filename), "w")
 
@@ -176,7 +176,7 @@ def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
             print('q= {0}, l= {1}\n'.format(q[j],l[i]))
 
             J_inferred = {}
-            for county in CV_counties:
+            for county in counties:
 
                 # print('County: {0}\n'.format(county))
 
@@ -196,7 +196,7 @@ def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
                 # MSE +=tmp
                 J_inferred[county] = Infered_Distrib
 
-            mse, std = MSE(J, J_inferred, CV_counties)
+            mse, std = MSE(J, J_inferred, counties)
             # variance = np.power(scores - MSE,2).sum()/len(CV_counties)
             print('MSE: {0}\t Variance: {1}\n'.format(100 * mse, 100 *std))
 
@@ -308,7 +308,7 @@ def Unreg_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Mar
     J_inferred = {}
     for county in counties:
 
-        print('County: {0}\n'.format(county))
+        # print('County: {0}\n'.format(county))
 
         r = Ethnicity_Marginals[county]
         c = Party_Marginals[county]
@@ -567,7 +567,7 @@ def Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals
     # scores = []
     for county in counties:
 
-        print('County: {0}\n'.format(county))
+        # print('County: {0}\n'.format(county))
 
         r = Ethnicity_Marginals[county]
         c = Party_Marginals[county]

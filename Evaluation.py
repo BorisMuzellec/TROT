@@ -5,7 +5,7 @@ def MSE(J_true, J_inferred, counties):
     """Compute MSE and its STD by cell.
     Input: dictionary of joints probability with counties as keys."""
 
-    assert len(J_true) == len(J_inferred)
+    assert len(counties) == len(J_inferred.keys())
 
     l = []
 
