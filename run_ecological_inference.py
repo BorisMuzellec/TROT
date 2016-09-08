@@ -23,7 +23,7 @@ def data_loading_and_preprocessing(filename):
     FlData = pd.read_csv(filename)
 
     # Let's use only district 3
-    # FlData = FlData.loc[FlData['District'] == 3]
+    FlData = FlData.loc[FlData['District'] == 3]
 
     FlData = FlData.dropna()
     FlData.drop('VoterID', axis=1, inplace=True)

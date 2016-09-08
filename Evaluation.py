@@ -13,7 +13,8 @@ def MSE(J_true, J_inferred, counties):
         diff = np.array(J_true[c] - J_inferred[c]).flatten()
         l.append(diff)
 
-    v = np.asarray(l) ** 2
+    v = np.asarray(l).flatten() ** 2
+
     return v.mean(), v.std()
 
 
