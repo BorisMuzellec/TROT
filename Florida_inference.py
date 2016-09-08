@@ -206,14 +206,14 @@ def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
                 q_best = q[j]
                 l_best = l[i]
                 variance_best = std
-                best_score = mse
+                best_mse = mse
 
 
-    print('Best score: {0}, Best q: {1}, Best lambda: {2}\t Standard Variance: {3}\n'.format(best_score, q_best, l_best, variance_best))
+    print('Best score: {0}, Best q: {1}, Best lambda: {2}\t Standard Variance: {3}\n'.format(best_mse, q_best, l_best, variance_best))
 
     file.close()
 
-    return best_score, q_best, l_best
+    return best_mse, q_best, l_best
 
 
 def Unreg_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties):
@@ -431,8 +431,8 @@ def CV_Cross_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
     l_best = l[0]
     variance_best = 0
 
-    for j in q:
-        for i in l:
+    for j in range(len(q)):
+        for i in range(len(l)):
 
             # score = 0
             print('q= {0}, l= {1}\n'.format(q[j],l[i]))
@@ -464,11 +464,11 @@ def CV_Cross_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
                 q_best = q[j]
                 l_best = l[i]
                 variance_best = std
-                best_score = mse
+                best_mse = mse
 
-    print('Best score: {0}, Best q: {1}, Best lambda: {2}\n'.format(best_score, q_best, l_best, variance_best))
+    print('Best score: {0}, Best q: {1}, Best lambda: {2}\n'.format(best_mse, q_best, l_best, variance_best))
 
-    return best_score, q_best, l_best
+    return best_mse, q_best, l_best
 
 
 def Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties,q,l, filename):

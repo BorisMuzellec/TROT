@@ -13,19 +13,7 @@ def MSE(J_true, J_inferred, counties):
         diff = np.array(J_true[c] - J_inferred[c]).flatten()
         l.append(diff)
 
-    # # into lists and then arrays
-    # if type(J_true) == dict:
-    #     J1 = np.asarray([v for v in J_true.values()])
-    # # list into array
-    # elif type(J_true) == list:
-    #     J1 = np.asarray(J_true)
-    #
-    # if type(J_inferred) == dict:
-    #     J2 = np.asarray([v for v in J_inferred.values()])
-    # elif type(J_inferred) == list:
-    #     J2 = np.asarray(J_inferred)
-
-    v = diff ** 2
+    v = np.asarray(l) ** 2
     return v.mean(), v.std()
 
 
