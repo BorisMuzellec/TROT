@@ -23,7 +23,7 @@ def data_loading_and_preprocessing(filename):
     FlData = pd.read_csv(filename)
 
     # Let's use only district 3
-    FlData = FlData.loc[FlData['District'] == 3]
+    # FlData = FlData.loc[FlData['District'] == 3]
 
     FlData = FlData.dropna()
     FlData.drop('VoterID', axis=1, inplace=True)
@@ -152,6 +152,9 @@ pickle.dump((Joint_Distrib, J_inferred), f)
 f.close()
 
 # baseline
-J_inferred = National_Average_Baseline(FlData, all_counties)
-mse, std = MSE(Joint_Distrib, J_inferred, all_counties)
+J_baseline = National_Average_Baseline(FlData, all_counties)
+mse, std = MSE(Joint_Distrib, J_baseline, all_counties)
 print('Baseline:', mse * 100, std * 100)
+f = open('baseline.pkl', 'wb')
+pickle.dump((J_baseline), f)
+f.close()
