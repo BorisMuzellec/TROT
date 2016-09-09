@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 
 from Florida_inference import CV_Local_Inference, Local_Inference
-from Evaluation import MSE, National_Average_Baseline
+from Evaluation import KL, National_Average_Baseline
 
 
 def rbf(x, y, gamma=.1):
@@ -95,9 +95,26 @@ for i, e in enumerate(ethnies):
         print(p)
         print(average_by_p)
         print("\n\n\n")
-        M[i, j] = np.array(dist_1(average_by_e, average_by_p))
+        M[i, j] = np.array(dist_2(average_by_e, average_by_p))
+
+# no prior
+# M = np.ones((6, 3))
+
+# Gallup's data
+# assuming Gallup's Other = {Native, Other}
+# M = np.array([
+#               [.38, .26, .35],
+#               [.29, .64, .05],
+#               [.50, .32, .13],
+#               [.46, .36, .17],
+#               [.49, .32, .18],
+#               [.49, .32, .18]
+#               ])
+# M = 1. - M / 100.
+
 
 CV_counties = FlData.loc[FlData['District'] == 3].County.unique()
+# print('Counties of district 3:', CV_counties)
 # Maybe we can just predict on them all to make it easy
 # Validation_counties = FlData.loc[FlData['District'] != 3].County.unique()
 all_counties = FlData.County.unique()
@@ -136,25 +153,29 @@ for county in all_counties:
 
     Joint_Distrib[county] = Joint_Distrib[county]/Total_Num_Voters
 
-print('Start inference')
+print('Start inference TROT')
 best_score, best_q, best_l = CV_Local_Inference(Voters_By_County, M, Joint_Distrib, Ethnicity_Marginals, Party_Marginals,
                    CV_counties, output_file)
 
 print('Use selected parameters on the rest of the dataset')
-
 J_inferred = Local_Inference(Voters_By_County, M, Joint_Distrib, Ethnicity_Marginals, Party_Marginals, all_counties, best_q, best_l, 'validation')
-mse, std = MSE(Joint_Distrib, J_inferred, all_counties)
-print(mse * 100, std * 100)  # change scale, they are anyways difference of probabilities
+kl, std = KL(Joint_Distrib, J_inferred, all_counties, save_to_file='kl', compute_abs_err=True)
+print(kl, std)
 
 # dump objects for further analysis
 f = open('joints.pkl', 'wb')
 pickle.dump((Joint_Distrib, J_inferred), f)
 f.close()
 
+
+# Simplex
+
+
 # baseline
-J_baseline = National_Average_Baseline(FlData, all_counties)
-mse, std = MSE(Joint_Distrib, J_baseline, all_counties)
-print('Baseline:', mse * 100, std * 100)
-f = open('baseline.pkl', 'wb')
-pickle.dump((J_baseline), f)
-f.close()
+# print('Start baseline.')
+# J_baseline = National_Average_Baseline(FlData, all_counties)
+# kl, std = KL(Joint_Distrib, J_baseline, all_counties, compute_abs_err=True)
+# print('Baseline:', kl, std)
+# f = open('baseline.pkl', 'wb')
+# pickle.dump((J_baseline), f)
+# f.close()
