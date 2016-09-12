@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-from scipy.stats import entropy
+
 
 def MSE(J_true, J_inferred, counties, save_to_file=None):
     """Compute MSE and its STD by cell.
@@ -13,8 +13,6 @@ def MSE(J_true, J_inferred, counties, save_to_file=None):
     for c in counties:
         diff = np.array(J_true[c] - J_inferred[c]).flatten()
         l.append(diff)
-
-    v = np.asarray(l).flatten() ** 2
 
     assert len(counties) == len(J_inferred.keys())
 

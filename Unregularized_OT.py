@@ -28,7 +28,8 @@ def Unregularized_OT(M,r,c):
             Ar[i,m*i+j] = 1
 
 
-
-    res = linprog(M.flatten(),A_eq = np.vstack((Ar,Ac)),b_eq=np.hstack((r/r.sum(),c/c.sum())))
+    # fix this on the distribution instead
+    # res = linprog(M.flatten(),A_eq = np.vstack((Ar,Ac)),b_eq=np.hstack((r/r.sum(),c/c.sum())))
+    res = linprog(M.flatten(), A_eq = np.vstack((Ar,Ac)), b_eq=np.hstack((r,c)))
 
     return res.x.reshape((n,m))
