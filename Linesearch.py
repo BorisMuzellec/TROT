@@ -6,12 +6,12 @@ Created on Thu Jun 23 14:56:08 2016
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import math
-import time
-from copy import copy, deepcopy
-from Projections import Sinkhorn, check, inner_Frobenius
-from Generators import rand_marginal, rand_costs  
+
+from copy import deepcopy
+from Projections import  check, inner_Frobenius
+
+
+#A line search TROT optimizer -- very slow, just for comparison
 
 
 def q_exp (q,u):
@@ -66,7 +66,7 @@ def linesearch(q,u,r,prec):
         errors.append(abs(tmp-r)/r)
         count = count + 1
     
-    #print(count)
+
     if (count >= 100):
         print("Line Convergence failure")
     return y, errors
@@ -89,7 +89,6 @@ def line_Sinkhorn(q,M,r,c,l,precision):
 
     while not (check(p,s,r,c,precision)) and count <= 1000:
         
-        #Simplify this using p and s
         for i in range(n):
             alpha[i], _ = linesearch(q,A[i,:],r[i],precision/10)
         A = (A.transpose() + alpha).transpose()
@@ -99,7 +98,6 @@ def line_Sinkhorn(q,M,r,c,l,precision):
             beta[i], _ = linesearch(q,A[:,i],c[i],precision/10)        
         A += beta
     
-        #print(beta)
         
         P = q1/q_exp(q,A)
         p = P.sum(axis = 1)

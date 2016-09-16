@@ -7,6 +7,9 @@ from Florida_inference import Unreg_Local_Inference
 from Evaluation import KL, National_Average_Baseline
 
 
+q = np.arange(0.5, 2.1, 0.1)
+l = [0.01, 0.1, 1., 10., 100., 1000.] 
+
 def rbf(x, y, gamma=10):
     return np.exp(- gamma * np.linalg.norm(x - y))
 
@@ -154,7 +157,7 @@ output_file = 'output_2'
 
 print('Start inference TROT')
 best_score, best_q, best_l = CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals,
-                   CV_counties, output_file)
+                   CV_counties,q,l, output_file)
 
 
 best_q, best_l = 2.0, 100.

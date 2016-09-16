@@ -21,12 +21,13 @@ def Sinkhorn(A,r,c,precision):
         p = np.sum(A,axis = 1).A1
         count+=1
     
-    #print(count)
+    if count >= 4000:
+        print('Unable to perform Sinkhorn-Knopp projection')
     return A
     
     
 
-#Euclidean projection on U(r,c)
+#Euclidean projection on U(r,c) -- Assumes that A is a square matrix
 def euc_projection(A,r,c,precision):
     
     A = np.matrix(A)
@@ -39,11 +40,9 @@ def euc_projection(A,r,c,precision):
     
     count = 0
     
-    while not (check(p,q,r,c,precision)) and count <=5000:
+    while not (check(p,q,r,c,precision)) and count <=4000:
         
         #Projection on the transportation constraints
-        #Note that in Python vectors are row arrays
-        #Thus the formula may differ from the one in the notebook wich assumes column vectors
         A = A + (np.tile(r,(n,1)).transpose() +np.tile(c,(n,1)))/n - (np.tile(p,(n,1)).transpose() + np.tile(q,(n,1)))/n + (A.sum() - 1)* H/(n*n)
         
         #Projection on the positivity constraint
@@ -53,12 +52,13 @@ def euc_projection(A,r,c,precision):
         q = np.sum(A,axis = 0).A1
         
         count = count +1
-    
-    #print(count)
+        
+    if count >= 4000:
+        print('Unable to perform Euclidean projection')
     return A
 
     
-#Returns true iff p and q approximate respectively r and c to a 'prec' ration in infinite norm
+#Returns true iff p and q approximate respectively r and c to a 'prec' ratio in infinite norm
 def check(p,q,r,c,prec):
     if (np.linalg.norm(np.divide(p,r)-1,np.inf)>prec) or (np.linalg.norm(np.divide(q,c)-1,np.inf)>prec):
         return False
