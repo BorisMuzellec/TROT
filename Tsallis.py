@@ -25,11 +25,15 @@ def q_obj(q,P,M,l):
     P_q = np.power(P,q)
     return inner_Frobenius(P,M) - np.sum(P_q - P)/((1-q)*l)
 
-
 #Gradient of the objective function in q-space
 def q_grad(q,P,M,l):
     return M + (q*np.power(P,q-1) - 1)/(l*(1-q))
-    
+
+def sign(x):
+    if (x>0):
+        return 1 
+    else:
+        return -1    
     
 #A wrapper for the three TROT-solving algorithms, depending on the value of q
 #q must be positive
@@ -40,7 +44,12 @@ def TROT(q,M,r,c,l,precision):
     if q<1:
         return second_order_sinkhorn(q,M,r,c,l,precision)[0]
     elif q == 1:
-        return Sinkhorn(np.exp(-l*np.matrix(M)),r,c,precision)
+        #Add multipliers to rescale A and avoid dividing by zero
+        A = deepcopy(l*M)
+        A = A-np.amin(A,axis = 0)
+        A = (A.T-np.amin(A,axis = 1)).T
+        
+        return Sinkhorn(np.exp(-A),r,c,precision)
     else:
         return KL_proj_descent(q,M,r,c,l,precision, 50, rate = 1, rate_type = "square_summable")[0]
 
@@ -90,8 +99,15 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
     m = M.shape[1]
     q1  = q_exp(q,-1)
 
-    P = q1/q_exp(q,l*M)
     A = deepcopy(l*M)
+
+    #Add multipliers to make sure that A is not too large 
+    #We subtract the minimum on columns and then on rows 
+    #This does not change the solution of TROT 
+    A = A-np.amin(A,axis = 0)
+    A = (A.T-np.amin(A,axis = 1)).T
+    
+    P = q1/q_exp(q,A)
 
     p = P.sum(axis = 1)
     s = P.sum(axis = 0)
@@ -100,7 +116,7 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
     alpha = np.zeros(M.shape[0])
     beta = np.zeros(M.shape[1])
 
-    while not (check(p,s,r,c,precision)) and count <= 1000:
+    while not (check(p,s,r,c,precision)) and count <= 5000:
 
 
         A_q2 = np.divide(P,(1+(1-q)*A))
@@ -109,18 +125,23 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
         d = p-r
         delta = np.multiply(b,b) - 4*np.multiply(a,d)
 
-
+        
         for i in range(n):
             if (delta[i] >=0 and d[i]<0 and a[i]>0):
                 alpha[i] = - (b[i] + math.sqrt(delta[i]))/(2*a[i])
             elif (b[i] != 0):
                 alpha[i] = 2*d[i]/(-b[i])
             else: alpha[i] = 0
+            
+            #Check that the multiplier is not too large
+            if abs(alpha[i]) > 1/((2-2*q)*max(1+(1-q)*A[i,:])):
+                alpha[i] = sign(d[i])*1/((2-2*q)*max(1+(1-q)*A[i,:]))
 
         A = (A.transpose() + alpha).transpose()
 
 
         P = q1/q_exp(q,A)
+        
         s = P.sum(axis = 0)
 
         A_q2 = np.divide(P,(1+(1-q)*A))
@@ -136,14 +157,21 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
             elif (b[i] != 0):
                 beta[i] = 2*d[i]/(-b[i])
             else: beta[i] = 0
+            
+            #Check that the multiplier is not too large
+            if abs(beta[i]) > 1/((2-2*q)*max(1+(1-q)*A[:,i])):
+                beta[i] = sign(d[i])*1/((2-2*q)*max(1+(1-q)*A[:,i]))
         A += beta
 
 
         P = q1/q_exp(q,A)
+        
         p = P.sum(axis = 1)
         s = P.sum(axis = 0)
 
         count +=1
+    
+    print(P.sum())
 
     return P, count, q_obj(q,P,M,l)
     
@@ -154,7 +182,7 @@ def KL_proj_descent(q,M,r,c,l ,precision,T , rate = None, rate_type = None):
     if (q<=1): print("Warning: Projected gradient methods only work when q>1")    
     
     omega = math.sqrt(2*np.log(M.shape[0]))
-    ind_map = np.matrix(r).transpose().dot(np.matrix(c))    
+    ind_map = np.asarray(np.matrix(r).transpose().dot(np.matrix(c)))   
     
     P = deepcopy(ind_map)
 
