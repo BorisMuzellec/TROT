@@ -1,3 +1,4 @@
 *.csv
 *.pyc
+run_ecological_inference.py
 __pycache__/

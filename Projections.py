@@ -5,20 +5,21 @@ Created on Mon Apr 18 10:12:51 2016
 @author: boris
 """
 import numpy as np
+from Distances import inner_Frobenius
 
 #Sinkhorn-Knopp's algorithm - performs Kullback-Leibler projection on U(r,c)
 def Sinkhorn(A,r,c,precision):
     
-    p = np.sum(A,axis = 1).A1
-    q = np.sum(A,axis = 0).A1
+    p = np.sum(A,axis = 1)
+    q = np.sum(A,axis = 0)
     count = 0
 
     while not (check(p,q,r,c,precision)) and count <= 4000:
         
         A = np.diag(np.divide(r,p)).dot(A)
-        q = np.sum(A,axis = 0).A1
+        q = np.sum(A,axis = 0)
         A = A.dot(np.diag(np.divide(c,q)))
-        p = np.sum(A,axis = 1).A1
+        p = np.sum(A,axis = 1)
         count+=1
     
     if count >= 4000:
@@ -30,11 +31,13 @@ def Sinkhorn(A,r,c,precision):
 #Euclidean projection on U(r,c) -- Assumes that A is a square matrix
 def euc_projection(A,r,c,precision):
     
-    A = np.matrix(A)
     n = A.shape[0]
+    m = A.shape[0]
     
-    p = np.sum(A,axis = 1).A1  
-    q = np.sum(A,axis = 0).A1
+    assert (m == n),"Non-square matrix in euclidean projection"
+    
+    p = np.sum(A,axis = 1)
+    q = np.sum(A,axis = 0)
     
     H = np.matrix(np.full((n,n),1))
     
@@ -48,8 +51,8 @@ def euc_projection(A,r,c,precision):
         #Projection on the positivity constraint
         A = np.maximum(A,0)
         
-        p = np.sum(A,axis = 1).A1 
-        q = np.sum(A,axis = 0).A1
+        p = np.sum(A,axis = 1)
+        q = np.sum(A,axis = 0)
         
         count = count +1
         
@@ -64,7 +67,5 @@ def check(p,q,r,c,prec):
         return False
     else: return True
     
-#The Frobenius inner product for matrices
-def inner_Frobenius(P,Q):
-    return np.multiply(P,Q).sum()
+
     

@@ -16,7 +16,7 @@ def euc_proj_descent(q,M,r,c,l ,precision,T , rate = None, rate_type = None):
     
     if (q<=1): print("Warning: Projected gradient methods only work when q>1")    
     
-    ind_map = np.matrix(r).transpose().dot(np.matrix(c))    
+    ind_map = np.asarray(np.matrix(r).transpose().dot(np.matrix(c)))
     P = deepcopy(ind_map)
 
     new_score = q_obj(q,P,M,l)

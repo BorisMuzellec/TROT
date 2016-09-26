@@ -14,17 +14,16 @@ from Evaluation import KL
 
 # Compute the marginals and cost matrices in each county (usefull for CV)
 
-def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties,q,l, filename):
-
-    file = open('{0}.txt'.format(filename), "w")
-
+def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties,q,l, filename = None):
 
     best_kl = np.Inf
     q_best = q[0]
     l_best = l[0]
     variance_best = 0
 
-    file.write('q, l, kl\n')
+    if filename is not None:
+        file = open('{0}.txt'.format(filename), "w")
+        file.write('q, l, kl\n')
 
     for j in range(len(q)):
         for i in range(len(l)):
@@ -40,8 +39,9 @@ def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
                 J_inferred[county] = Infered_Distrib / Infered_Distrib.sum()
 
             kl, std = KL(J, J_inferred, counties)
-            print('q: %.4f, lambda: %.4f, KL: %.4f, STD: %.4f' % (q[j], l[i], kl, std))
-            file.write('%.4f, %.4f, %.4f\n' % (q[j], l[i], kl))
+            print('q: %.2f, lambda: %.4f, KL: %.4g, STD: %.4g' % (q[j], l[i], kl, std))
+            if filename is not None:
+                file.write('%.2f, %.4f, %.4g\n' % (q[j], l[i], kl))
 
             if kl < best_kl:
                 q_best = q[j]
@@ -50,9 +50,10 @@ def CV_Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
                 best_kl = kl
 
 
-    print('Best score: {0}, Best q: {1}, Best lambda: {2}\t Standard Variance: {3}\n'.format(best_kl, q_best, l_best, variance_best))
+    print('Best score: %.4g, Best q: %.2f, Best lambda: %.4f\t Standard Variance: %.4g\n' % (best_kl, q_best, l_best, variance_best))
 
-    file.close()
+    if filename is not None:
+        file.close()
 
     return best_kl, q_best, l_best
 
@@ -96,8 +97,8 @@ def CV_Cross_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
                 J_inferred[county] = Infered_Distrib / Infered_Distrib.sum()
 
             kl, std = KL(J, J_inferred, CV_counties)
-            print('KL: {0}\t Variance: {1}\n'.format(kl, std))
-
+            #print('KL: {0}\t Variance: {1}\n'.format(kl, std))
+            print('KL: %g\t Variance: %g\n' % kl, std)
             if kl < best_kl:
                 q_best = q[j]
                 l_best = l[i]
@@ -109,7 +110,7 @@ def CV_Cross_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Margin
     return best_kl, q_best, l_best
 
 
-def Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties,q,l, filename):
+def Local_Inference(Voters_By_County, M, J, Ethnicity_Marginals, Party_Marginals, counties,q,l):
 
     J_inferred = {}
     for county in counties:

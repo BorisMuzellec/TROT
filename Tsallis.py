@@ -9,7 +9,8 @@ Created on Wed Jun 15 11:38:13 2016
 import numpy as np
 import math
 from copy import deepcopy
-from Projections import check, inner_Frobenius, Sinkhorn
+from Projections import check, Sinkhorn
+from Distances import inner_Frobenius
 
 
 #Tsallis generalization of the exponential
@@ -40,16 +41,18 @@ def sign(x):
 def TROT(q,M,r,c,l,precision):
     
     assert (q >= 0),"Invalid parameter q: q must be strictly positive"
-   
-    if q<1:
-        return second_order_sinkhorn(q,M,r,c,l,precision)[0]
-    elif q == 1:
+
+    if np.isclose(q,1):
         #Add multipliers to rescale A and avoid dividing by zero
         A = deepcopy(l*M)
         A = A-np.amin(A,axis = 0)
         A = (A.T-np.amin(A,axis = 1)).T
         
         return Sinkhorn(np.exp(-A),r,c,precision)
+   
+    elif q<1:
+        return second_order_sinkhorn(q,M,r,c,l,precision)[0]
+
     else:
         return KL_proj_descent(q,M,r,c,l,precision, 50, rate = 1, rate_type = "square_summable")[0]
 
@@ -116,7 +119,7 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
     alpha = np.zeros(M.shape[0])
     beta = np.zeros(M.shape[1])
 
-    while not (check(p,s,r,c,precision)) and count <= 5000:
+    while not (check(p,s,r,c,precision)) and count <= 1000:
 
 
         A_q2 = np.divide(P,(1+(1-q)*A))
@@ -171,7 +174,7 @@ def second_order_sinkhorn(q,M,r,c,l,precision):
 
         count +=1
     
-    print(P.sum())
+    #print(P.sum())
 
     return P, count, q_obj(q,P,M,l)
     

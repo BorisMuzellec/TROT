@@ -86,7 +86,6 @@ def TROT_grid(q,l,mu1,mu2,t1,t2,n,output):
     
         ax_row.axes.get_xaxis().set_visible(False)
         ax_row.axes.get_yaxis().set_visible(False)
-        left, width = .25, .5
         bottom, height = .25, .5
         top = bottom + height
         ax_row.text(-0.05, 0.5*(bottom+top), 'q = {0}'.format(q[i]), horizontalalignment='right', verticalalignment='center', rotation='vertical',transform=ax_row.transAxes, fontsize='medium')
@@ -97,7 +96,6 @@ def TROT_grid(q,l,mu1,mu2,t1,t2,n,output):
         ax_col = plt.Subplot(fig,outer_col_marg[j], sharex = ax)
         ax_col.plot(x,c)
         fig.add_subplot(ax_col)    
-        left, width = .25, .5
         bottom, height = .25, .5
         ax_col.axes.get_xaxis().set_visible(False)
         ax_col.axes.get_yaxis().set_visible(False)

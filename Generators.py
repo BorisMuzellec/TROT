@@ -39,5 +39,4 @@ def euc_costs(n,scale):
     for i in range(n):
         for j in range(n):
             M[i,j]=(i/n - j/n)*(i/n - j/n)
-            #M[i,j] = abs(i/n-j/n)
     return M*scale
