@@ -17,5 +17,5 @@ and put it in the root folder of the repo.
 
 You can then run `Notebooks/Ecological\ Inference.ipynb` for a reproduction of the article's ecological inference pipeline, and `Notebooks/Tsallis\ Plots.ipynb` for a visualization of the impact of parameter $q$ and $\lambda$.
 
-The code contained in `/Trot` contain the basic for building a TROT-based application.
+The code contained in `Trot` contain the basic for building a TROT-based application.
 

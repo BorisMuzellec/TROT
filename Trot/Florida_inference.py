@@ -7,8 +7,8 @@ Created on Thu Aug 18 13:44:15 2016
 
 # import pandas as pd
 import numpy as np
-from Unregularized_OT import Unregularized_OT
 from Tsallis import TROT
+from Unregularized_OT import Unregularized_OT
 from Evaluation import KL
 
 
