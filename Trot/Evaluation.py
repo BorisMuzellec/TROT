@@ -36,8 +36,8 @@ def MSE(J_true, J_inferred, counties, save_to_file=None):
 def KL(J_true, J_inferred, counties, save_to_file=False, compute_abs_err=False):
     """Compute KL and its STD by cell.
     Input: dictionary of joints probability with counties as keys."""
-
-    EPS = 1e-15  # avoid KL +inf
+    
+    EPS = 1e-18  # avoid KL +inf
 
     assert len(counties) == len(J_inferred.keys())
 
@@ -46,7 +46,9 @@ def KL(J_true, J_inferred, counties, save_to_file=False, compute_abs_err=False):
         abs_list = []
 
     for c in counties:
-
+        
+        J_inferred[c] /= J_inferred[c].sum()
+        
         kl_county = 0.0
         for i in np.arange(J_true[c].shape[0]):
             for j in np.arange(J_true[c].shape[1]):
