@@ -15,11 +15,9 @@ numpy, scipy, pickle
 
 # Usage
 
-To run the Ecological Inference notebook, you will first want to download the Florida dataset (600 MB):
+To run the Ecological Inference notebook, you will first want to download the Florida dataset. It may be accessed [here](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/SVY5VF).
 
-`wget https://www.dropbox.com/s/pvxqi8hzcf4fshr/Fl_Data.csv`
-
-and put it in the root folder of the repo.
+It should then be stored in the root folder of the repo.
 
 You can then run `Notebooks/Ecological/Inference.ipynb` for a reproduction of the article's ecological inference pipeline, and `Notebooks/Tsallis/Plots.ipynb` for a visualization of the impact of parameter $q$ and $\lambda$.
 
